@@ -47,6 +47,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
   <link rel="stylesheet" href="style/style.css" type="text/css">
+
+  <link rel="stylesheet" href="jquery.datetimepicker.css" type="text/css">
 	
 </head>
 
@@ -73,8 +75,31 @@
   </div>
 </nav>
 <div id="sidebar_div" >
-			LEGEND<br>
-			
+			FILTER<br>
+      <div class="row">
+        <div class="col-lg-5">
+          Date Time Start
+        </div>
+        <div class="col-lg-5">
+          <input type='text' id='dt_start'/>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-lg-5">
+          Date Time End
+        </div>
+        <div class="col-lg-5">
+          <input type='text' id='dt_end'/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-5">
+          <button class='btn btn-primary btn-block'
+          onclick="filter()"
+          >Submit</button>
+        </div>
+    </div>
 </div>
     <div id="map" style="height: 660px"></div>
     <script type="text/javascript">
@@ -119,33 +144,44 @@
 
   var wkt = new Wkt.Wkt();
   var arrLoc=[]; 
+  var max_id;
+  var arr_dt_start=[];
+  var arr_dt_end=[];
+  var arr_id=[];
+  
   <?php
-    $sql = "SELECT * FROM dataqld where 
-    1=1";
+    $sql = "SELECT * FROM dataqld order by data_id ";
   $result = $conn->query($sql);
   
   if ($result->num_rows > 0) {
     // output data of each row
     while($row = $result->fetch_assoc()) {
+      
     ?>
     
   try{
+                    max_id=<?php echo $row['data_id'] ?>;
                     var geom = "POINT (<?php echo $row['data_longitude'] ?> <?php echo $row['data_latitude'] ?> )"; 
                     //alert('{{$d->wkt_exp}}');
                     wkt.read(geom); 
                     var feature_<?php echo $row['data_id'] ?> = wkt.toObject(); 
-                    feature_<?php echo $row['data_id'] ?>; 
+                     
                     feature_<?php echo $row['data_id'] ?>.on('click', function (e) { 
                         var pop = L.popup();
                         pop.setLatLng(e.latlng);
                         pop.setContent("<table>" +
                         "<tr><td>Advice </td><td>:</td><td><?php echo $row['data_advice'] ?></td></tr>"+
-                        "<tr><td>Address </td><td>:</td><td><?php echo substr($row['data_address'],0,10) ?> </td></tr>"+"</table>");        
+                        "<tr><td>Address </td><td>:</td><td><?php echo $row['data_address'] ?> </td></tr>"+
+                        "<tr><td>Start </td><td>:</td><td><?php echo $row['dt_start'] ?> </td></tr>"+
+                        "<tr><td>End </td><td>:</td><td><?php echo $row['dt_end'] ?> </td></tr>"+
+                        "</table>");        
                         map.openPopup(pop);
                     });  
-
-                    arrLoc.push(feature_<?php echo $row['data_id'] ?>);
-
+                    arr_dt_start[<?php echo $row['data_id'] ?>]='<?php echo  str_replace("-","/",$row['dt_start']) ?>';
+                    arr_dt_end[<?php echo $row['data_id'] ?>]='<?php echo  str_replace("-","/",$row['dt_end']) ?>';
+                    arrLoc[<?php echo $row['data_id'] ?>]=feature_<?php echo $row['data_id'] ?>;
+                    arr_id.push(<?php echo $row['data_id'] ?>);
+                   map.addLayer(arrLoc[<?php echo $row['data_id'] ?>]);
                 }catch(err) { console.log(err) } 
     
      <?php  
@@ -154,12 +190,12 @@
   ?>
 
 
-  var layerLoc = L.layerGroup(arrLoc);
+  //var layerLoc = L.layerGroup(arrLoc);
 
-	layerLoc.addTo(map);
+	//layerLoc.addTo(map);
 
  	  var overlayMaps={     
-       "Data QLD":layerLoc,
+   //    "Data QLD":layerLoc,
   	   }	
 
       var baseMaps = {
@@ -182,17 +218,67 @@
        L.circleMarker(e.latlng).addTo(map)
       });
 
-      var ctSidebar = L.control.sidebar('sidebar_div', {autoPan:true, closeButton:true, position: 'right'}).addTo(map);
+      var ctSidebar = L.control.sidebar('sidebar_div', {autoPan:true, closeButton:true, position: 'left'}).addTo(map);
 
-      var ctBtnSidebar = L.easyButton('<span>Lgn</span>',
-                function() {
+      var ctBtnSidebar = L.easyButton('<span>...</span>',
+      function() {
                 	ctSidebar.toggle();
-                });
+        });
 
       ctBtnSidebar.addTo(map);
 
-                
-
     </script>
   </body>
+
+  <script src="jquery.datetimepicker.js" type="text/javascript"></script>
+  <script>
+    
+    function filter()
+    {
+     // map.removeLayer(layerLoc);
+      for(var i=0;i<arr_id.length;i++)
+      {
+       
+           console.log($('#dt_start').val()+":00" + ">"+arr_dt_start[arr_id[i]]);
+          console.log($('#dt_end').val()+":00" + "<"+arr_dt_end[arr_id[i]]);
+          
+          if((Date.parse($('#dt_start').val()+":00")>Date.parse(arr_dt_start[arr_id[i]])) ||
+          (Date.parse($('#dt_end').val()+":00")<Date.parse(arr_dt_end[arr_id[i]])))
+          {
+            console.log(true);
+
+            map.removeLayer(arrLoc[arr_id[i]]);
+          }
+          else
+          {
+            console.log(false);
+
+            map.addLayer(arrLoc[arr_id[i]]);
+          
+          }
+        
+
+       
+      }
+
+      
+    }
+
+    $('#dt_start').datetimepicker({
+      dayOfWeekStart : 1,
+      lang:'en',
+      startDate:	'2021/12/15',
+      value:'2021/12/15 24:00',
+      step:10
+    });
+
+    $('#dt_end').datetimepicker({
+      dayOfWeekStart : 1,
+      lang:'en',
+      startDate:	'2021/12/30',
+      value:'2021/12/30 24:00',
+      step:10
+    });
+
+  </script>
 </html>
