@@ -76,6 +76,7 @@
 </nav>
 <div id="sidebar_div" >
 			FILTER<br>
+      
       <div class="row">
         <div class="col-lg-5">
           Date Time Start
@@ -93,6 +94,27 @@
           <input type='text' id='dt_end'/>
         </div>
       </div>
+      <div class="row">
+        <div class="col-lg-5">
+          Advice
+        </div>
+        <div class="col-lg-5">
+          <Select id='cb_advice'>
+            <option value="">-all-</option>
+            <?php
+             $sql0 = "SELECT distinct data_advice FROM 
+             dataqld order by data_advice ";
+             $result0 = $conn->query($sql0);
+             while($row0 = $result0->fetch_assoc()) {
+            ?>
+            <option value="<?php echo $row0['data_advice'] ?>"><?php echo $row0['data_advice'] ?></option>
+            <?php
+             }
+             ?>
+          </Select>
+        </div>
+      </div>
+
       <div class="row">
         <div class="col-lg-5">
           <button class='btn btn-primary btn-block'
@@ -147,7 +169,9 @@
   var max_id;
   var arr_dt_start=[];
   var arr_dt_end=[];
+  var arr_advice=[];
   var arr_id=[];
+
   
   <?php
     $sql = "SELECT * FROM dataqld order by data_id ";
@@ -179,6 +203,7 @@
                     });  
                     arr_dt_start[<?php echo $row['data_id'] ?>]='<?php echo  str_replace("-","/",$row['dt_start']) ?>';
                     arr_dt_end[<?php echo $row['data_id'] ?>]='<?php echo  str_replace("-","/",$row['dt_end']) ?>';
+                    arr_advice[<?php echo $row['data_id'] ?>]='<?php echo  $row['data_advice'] ?>';
                     arrLoc[<?php echo $row['data_id'] ?>]=feature_<?php echo $row['data_id'] ?>;
                     arr_id.push(<?php echo $row['data_id'] ?>);
                    map.addLayer(arrLoc[<?php echo $row['data_id'] ?>]);
@@ -239,22 +264,30 @@
       for(var i=0;i<arr_id.length;i++)
       {
        
-           console.log($('#dt_start').val()+":00" + ">"+arr_dt_start[arr_id[i]]);
+          console.log($('#dt_start').val()+":00" + ">"+arr_dt_start[arr_id[i]]);
           console.log($('#dt_end').val()+":00" + "<"+arr_dt_end[arr_id[i]]);
           
           if((Date.parse($('#dt_start').val()+":00")>Date.parse(arr_dt_start[arr_id[i]])) ||
           (Date.parse($('#dt_end').val()+":00")<Date.parse(arr_dt_end[arr_id[i]])))
           {
-            console.log(true);
-
             map.removeLayer(arrLoc[arr_id[i]]);
           }
           else
           {
-            console.log(false);
-
-            map.addLayer(arrLoc[arr_id[i]]);
-          
+            if($('#cb_advice').val()){
+              if($('#cb_advice').val()==arr_advice[arr_id[i]])
+              {
+                map.addLayer(arrLoc[arr_id[i]]);
+              }
+              else
+              {
+                map.removeLayer(arrLoc[arr_id[i]]);
+              }
+            }
+            else
+            {
+              map.addLayer(arrLoc[arr_id[i]]);
+            }
           }
         
 
