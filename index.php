@@ -10,9 +10,7 @@
   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
   crossorigin=""></script>
 
-	<link rel="stylesheet" href="css/leaflet-search.css" type="text/css">
-	<script type="text/javascript" src="https://opengeo.tech/maps/leaflet-search/dist/leaflet-search.min.js"></script>
- 
+	
 	<link rel="stylesheet" href="plugins/leaflet.wmslegend.css" type="text/css">
   <script src="plugins/leaflet.wmslegend.js" type="text/javascript"></script>  
 
@@ -281,7 +279,7 @@
               }
               else
               {
-                map.removeLayer(arrLoc[arr_id[i]]);
+                map.removeLayer(arrLoc[arr_id[i]]);f
               }
             }
             else
